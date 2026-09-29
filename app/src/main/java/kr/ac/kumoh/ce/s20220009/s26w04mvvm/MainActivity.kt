@@ -17,7 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,16 +44,25 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
+    var count by retain { mutableIntStateOf(0) }
+
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        Counter(Modifier.padding(innerPadding))
+        Counter(
+            modifier = Modifier.padding(innerPadding),
+            count = count
+        ) {
+            count = it
+        }
     }
 }
 
 @Composable
 fun Counter(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    count: Int,
+    onChangeCount: (Int) -> Unit,
 ) {
-    var count by remember { mutableIntStateOf(0) }
+    var expanded by rememberSaveable {mutableStateOf(false)}
 
     Column(
         modifier = modifier // Modifier 사용하면 윗 여백 없음
@@ -75,26 +87,41 @@ fun Counter(
             Button(
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    count++
+                    onChangeCount(count + 1)
                 }
             ) {
                 Text("+", fontSize = 30.sp)
             }
 
-            Button(
-                onClick = {
-                    count--
+            if (expanded) {
+
+                Button(
+                    onClick = {
+                        onChangeCount(count - 1)
+                        expanded = false
+                    }
+                ) {
+                    Text("-", fontSize = 30.sp)
                 }
-            ) {
-                Text("-", fontSize = 30.sp)
+
+                Button(
+                    onClick = {
+                        onChangeCount(0)
+                        expanded = false
+                    }
+                ) {
+                    Text("0", fontSize = 30.sp)
+                }
             }
 
-            Button(
-                onClick = {
-                    count = 0
+            else{
+                Button(
+                    onClick = {
+                        expanded = true
+                    }
+                ) {
+                    Text("...", fontSize = 30.sp)
                 }
-            ) {
-                Text("0", fontSize = 30.sp)
             }
         }
     }
