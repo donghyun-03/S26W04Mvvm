@@ -4,21 +4,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class CounterViewModel : ViewModel() {
-    private var _counter by mutableStateOf(CounterModel(0))
-    val counter: CounterModel //immutable 한 객체를 만들어서 반환 ex) 1에서 1을 증가하면 1인 카운터를 버리고 2인 카운터를 반환
-        get() = _counter
+//    private var _counter by mutableStateOf(CounterModel(0))
+    private val _counter = MutableStateFlow(CounterModel(0))
+
+    // Mutable로 아예 바꿀 수 없도록 변환해서 넘겨줌 (복사해서 넘겨줌)
+    val counter = _counter.asStateFlow()
 
     fun incrementCount() {
-        _counter = _counter.increment()
+        _counter.value = _counter.value.increment()
     }
 
     fun decrementCount() {
-        _counter = _counter.decrement()
+        _counter.value = _counter.value.decrement()
     }
 
     fun resetCount() {
-        _counter = _counter.reset()
+        _counter.value = _counter.value.reset()
     }
 }
