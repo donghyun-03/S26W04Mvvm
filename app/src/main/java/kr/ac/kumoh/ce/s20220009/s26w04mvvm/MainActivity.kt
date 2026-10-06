@@ -14,12 +14,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -30,7 +34,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.launch
 import kr.ac.kumoh.ce.s20220009.s26w04mvvm.Counter
 import kr.ac.kumoh.ce.s20220009.s26w04mvvm.ui.theme.S26W04MvvmTheme
 
@@ -53,13 +59,27 @@ fun MainScreen(
 ) {
     val counterState by viewModel.counter.collectAsStateWithLifecycle()
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    // key1에 아무 값도 주지 않아서 (Unit 지정), 최초 한 번만 실행
+    LaunchedEffect(key1 = Unit) {
+        viewModel.events.collectLatest { message ->
+            scope.launch {
+                snackbarHostState.showSnackbar(message)
+            }
+        }
+    }
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         Counter(
             modifier = Modifier.padding(innerPadding),
             count = counterState.count,
-            onIncrement = { viewModel.incrementCount() },
-            onDecrement = { viewModel.decrementCount() },
-            onReset = { viewModel.resetCount() },
+            onIncrement = { viewModel.incrementCounter() },
+            onDecrement = { viewModel.decrementCounter() },
+            onReset = { viewModel.resetCounter() },
         )
     }
 }
